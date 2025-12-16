@@ -1,312 +1,1347 @@
 {
   "info": {
-    "_postman_id": "auth-microservice-collection",
-    "name": "Auth Microservice API",
+    "_postman_id": "auth-microservice-v2",
+    "name": "Auth Microservice API v2.0 - Optimized",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for testing the Enterprise-Grade Auth Microservice"
+    "description": "Complete Postman collection for the optimized Auth Microservice (Google & GitHub OAuth only)\n\nFeatures:\n- JWT Authentication\n- Google & GitHub OAuth 2.0\n- RBAC (5 default roles)\n- Email verification\n- Password management\n- Session tracking\n\nLast Updated: December 16, 2025"
   },
   "item": [
     {
-      "name": "Auth",
-      "description": "Authentication routes",
+      "name": "🏥 Health Check",
       "item": [
         {
-          "name": "Register",
+          "name": "Server Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Server is healthy', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.message).to.include('healthy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check server health status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "description": "User registration, login, logout, and token management",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Returns access token', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.accessToken).to.exist;",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "});",
+                  "",
+                  "pm.test('User data is returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.user).to.exist;",
+                  "    pm.expect(jsonData.data.user.email).to.exist;",
+                  "    pm.expect(jsonData.data.user.role).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/api/v1/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "register"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"confirmPassword\": \"SecurePass123!\"\n}"
-            }
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"confirmPassword\": \"SecurePass123!\"\n}"
+            },
+            "description": "Register a new user account"
           }
         },
         {
-          "name": "Login",
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns tokens', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.accessToken).to.exist;",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "    ",
+                  "    // Check for refreshToken in response or cookie",
+                  "    if (jsonData.data.refreshToken) {",
+                  "        pm.collectionVariables.set('refreshToken', jsonData.data.refreshToken);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/api/v1/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
-            }
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "description": "Login with email and password"
           }
         },
         {
-          "name": "Logout",
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin login successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('adminAccessToken', jsonData.data.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/api/v1/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{}"
+              "raw": "{\n  \"email\": \"alice.admin@example.com\",\n  \"password\": \"AdminPass123!\"\n}"
+            },
+            "description": "Login as admin user (seeded data)"
+          }
+        },
+        {
+          "name": "Login Superadmin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Superadmin login successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('superadminAccessToken', jsonData.data.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@example.com\",\n  \"password\": \"SuperAdmin123!\"\n}"
+            },
+            "description": "Login as superadmin (seeded data)"
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "me"]
             },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get authenticated user details"
           }
         },
         {
-          "name": "Refresh Token",
+          "name": "Refresh Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Token refreshed', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.accessToken).to.exist;",
+                  "    pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/api/v1/auth/refresh",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "refresh"]
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
-            }
+            },
+            "description": "Refresh expired access token using refresh token"
           }
         },
         {
           "name": "Verify Email",
           "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/v1/auth/verify-email/{{verificationToken}}"
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/verify-email/:token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "verify-email", ":token"],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "{{verificationToken}}",
+                  "description": "Email verification token from email"
+                }
+              ]
+            },
+            "description": "Verify user email with token sent via email"
           }
         },
         {
           "name": "Resend Verification Email",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/api/v1/auth/resend-verification",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/resend-verification",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "resend-verification"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"john@example.com\"\n}"
-            }
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+            },
+            "description": "Resend email verification link"
           }
         },
         {
           "name": "Change Password",
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/api/v1/auth/change-password",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "change-password"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"currentPassword\": \"SecurePass123!\",\n  \"newPassword\": \"NewSecurePass123$\",\n  \"confirmNewPassword\": \"NewSecurePass123$\"\n}"
+              "raw": "{\n  \"currentPassword\": \"SecurePass123!\",\n  \"newPassword\": \"NewSecurePass123!\",\n  \"confirmNewPassword\": \"NewSecurePass123!\"\n}"
             },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Change user password (requires authentication)"
           }
         },
         {
-          "name": "Get Current User",
+          "name": "Get Active Sessions",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/auth/me",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "sessions"]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get all active sessions for current user"
+          }
+        },
+        {
+          "name": "Revoke Session",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/sessions/:sessionId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "sessions", ":sessionId"],
+              "variable": [
+                {
+                  "key": "sessionId",
+                  "value": "{{sessionId}}",
+                  "description": "Session/Token ID to revoke"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Revoke a specific session"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "auth", "logout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Logout user and revoke tokens"
           }
         }
       ]
     },
     {
-      "name": "OAuth",
-      "description": "OAuth routes",
+      "name": "🔗 OAuth",
+      "description": "Google & GitHub OAuth integration (Facebook removed)",
       "item": [
         {
-          "name": "Google OAuth Login",
+          "name": "Google OAuth - Initiate",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/oauth/google"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/oauth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "oauth", "google"]
+            },
+            "description": "Initiate Google OAuth flow (redirects to Google consent screen)\n\n⚠️ Open this URL in browser, not Postman"
           }
         },
         {
-          "name": "Facebook OAuth Login",
+          "name": "Google OAuth - Callback",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/oauth/facebook"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/oauth/google/callback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "oauth", "google", "callback"]
+            },
+            "description": "Google OAuth callback endpoint (handled automatically)\n\nDO NOT call manually - Google redirects here after consent"
           }
         },
         {
-          "name": "GitHub OAuth Login",
+          "name": "GitHub OAuth - Initiate",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/oauth/github"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/oauth/github",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "oauth", "github"]
+            },
+            "description": "Initiate GitHub OAuth flow (redirects to GitHub authorization)\n\n⚠️ Open this URL in browser, not Postman"
+          }
+        },
+        {
+          "name": "GitHub OAuth - Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/oauth/github/callback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "oauth", "github", "callback"]
+            },
+            "description": "GitHub OAuth callback endpoint (handled automatically)\n\nDO NOT call manually - GitHub redirects here after authorization"
           }
         },
         {
           "name": "Get Linked OAuth Providers",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/oauth/providers",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/oauth/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "oauth", "providers"]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get list of OAuth providers linked to user account"
           }
         },
         {
-          "name": "Unlink OAuth Provider",
+          "name": "Unlink Google",
           "request": {
             "method": "DELETE",
-            "url": "{{baseUrl}}/api/v1/oauth/google",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/oauth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "oauth", "google"]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Unlink Google account from user profile"
+          }
+        },
+        {
+          "name": "Unlink GitHub",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/oauth/github",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "oauth", "github"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Unlink GitHub account from user profile"
           }
         }
       ]
     },
     {
-      "name": "Users",
-      "description": "User management routes",
+      "name": "👤 Users",
+      "description": "User profile and account management",
       "item": [
         {
           "name": "Get User Profile",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/users/profile",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", "profile"]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get authenticated user's profile"
           }
         },
         {
           "name": "Update User Profile",
           "request": {
             "method": "PUT",
-            "url": "{{baseUrl}}/api/v1/users/profile",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", "profile"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"1234567890\"\n}"
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"9876543210\",\n  \"bio\": \"Full-stack developer and tech enthusiast\",\n  \"dateOfBirth\": \"1990-01-15\"\n}"
             },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Update user profile information"
           }
         },
         {
           "name": "Update User Preferences",
           "request": {
             "method": "PUT",
-            "url": "{{baseUrl}}/api/v1/users/preferences",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/preferences",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", "preferences"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"language\": \"en\",\n  \"timezone\": \"UTC\",\n  \"notifications\": {\"email\": true, \"push\": true}\n}"
+              "raw": "{\n  \"language\": \"en\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"notifications\": {\n    \"email\": true,\n    \"push\": false\n  }\n}"
             },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Update user preferences (language, timezone, notifications)"
           }
         },
         {
           "name": "Delete User Account",
           "request": {
             "method": "DELETE",
-            "url": "{{baseUrl}}/api/v1/users/profile",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", "profile"]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Delete user account permanently"
           }
         },
         {
-          "name": "List Users",
+          "name": "List Users (Admin)",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/users?page=1&limit=10",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users?page=1&limit=10&sortBy=createdAt&order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "description": "firstName, lastName, email, createdAt"
+                },
+                {
+                  "key": "order",
+                  "value": "desc",
+                  "description": "asc or desc"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Role ObjectId"
+                }
+              ]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "List all users with pagination (Admin only)"
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/search?q=john&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "john",
+                  "description": "Search query (min 2 chars)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Search users by name or email"
+          }
+        },
+        {
+          "name": "Get User by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:userId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}",
+                  "description": "MongoDB ObjectId"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get specific user by ID (Admin only)"
+          }
+        },
+        {
+          "name": "Update User Role (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:userId/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", ":userId", "role"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"{{roleId}}\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Update user's role (Admin only)"
+          }
+        },
+        {
+          "name": "Activate User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:userId/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", ":userId", "activate"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Activate deactivated user account (Admin only)"
+          }
+        },
+        {
+          "name": "Deactivate User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/:userId/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", ":userId", "deactivate"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Deactivate user account (Admin only)"
+          }
+        },
+        {
+          "name": "Get User Statistics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/users/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "users", "statistics"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get user statistics (total, active, verified, locked)"
           }
         }
       ]
     },
     {
-      "name": "Roles",
-      "description": "Role and permission management",
+      "name": "🔑 Roles & Permissions",
+      "description": "RBAC management (Superadmin only)",
       "item": [
         {
           "name": "Initialize Default Roles",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/v1/roles/initialize",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/initialize",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "initialize"]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{superadminAccessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superadminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Initialize 5 default roles (superadmin, admin, moderator, user, guest)"
           }
         },
         {
           "name": "Create Role",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/v1/roles",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"manager\",\n  \"displayName\": \"Manager\",\n  \"description\": \"Manager role with custom permissions\",\n  \"permissions\": [{\"resource\": \"users\", \"actions\": [\"read\", \"update\"]}],\n  \"level\": 7\n}"
+              "raw": "{\n  \"name\": \"editor\",\n  \"displayName\": \"Content Editor\",\n  \"description\": \"Can create and edit content but not delete\",\n  \"level\": 4,\n  \"permissions\": [\n    {\n      \"resource\": \"posts\",\n      \"actions\": [\"create\", \"read\", \"update\"]\n    },\n    {\n      \"resource\": \"comments\",\n      \"actions\": [\"read\", \"update\"]\n    }\n  ]\n}"
             },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{superadminAccessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superadminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Create custom role with permissions"
           }
         },
         {
-          "name": "List Roles",
+          "name": "List All Roles",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/roles",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles?activeOnly=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles"],
+              "query": [
+                {
+                  "key": "activeOnly",
+                  "value": "false",
+                  "description": "Filter active roles only"
+                }
+              ]
+            },
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
-            }
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "List all roles (Admin can view, Superadmin can manage)"
+          }
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/:roleId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", ":roleId"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get specific role details"
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/:roleId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", ":roleId"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Senior Editor\",\n  \"description\": \"Senior content editor with enhanced permissions\",\n  \"level\": 5\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superadminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Update role details (Superadmin only)"
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/:roleId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", ":roleId"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superadminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Delete custom role (cannot delete system roles)"
+          }
+        },
+        {
+          "name": "Get Role Permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/:roleId/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", ":roleId", "permissions"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get all permissions for a role"
+          }
+        },
+        {
+          "name": "Add Permission to Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/:roleId/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", ":roleId", "permissions"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"files\",\n  \"action\": \"create\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superadminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Add permission to role"
+          }
+        },
+        {
+          "name": "Remove Permission from Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/:roleId/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", ":roleId", "permissions"],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"files\",\n  \"action\": \"delete\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{superadminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Remove permission from role"
+          }
+        },
+        {
+          "name": "Get Users by Role",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/:roleId/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", ":roleId", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "{{roleId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get all users assigned to a specific role"
+          }
+        },
+        {
+          "name": "Get Role Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/roles/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "roles", "statistics"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Get role statistics"
           }
         }
       ]
     },
     {
-      "name": "Password",
-      "description": "Password reset and verification",
+      "name": "🔐 Password Management",
+      "description": "Password reset and recovery",
       "item": [
         {
           "name": "Forgot Password",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/v1/password/forgot",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/password/forgot",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "password", "forgot"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"john@example.com\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Reset Password",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/v1/password/reset/{{resetToken}}",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"newPassword\": \"NewPassword123$\",\n  \"confirmPassword\": \"NewPassword123$\"\n}"
-            }
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+            },
+            "description": "Request password reset link via email"
           }
         },
         {
           "name": "Verify Reset Token",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/api/v1/password/verify/{{resetToken}}"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/password/verify/:token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "password", "verify", ":token"],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "{{resetToken}}",
+                  "description": "Password reset token from email"
+                }
+              ]
+            },
+            "description": "Verify if password reset token is valid"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/{{apiVersion}}/password/reset/:token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "{{apiVersion}}", "password", "reset", ":token"],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "{{resetToken}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewSecurePassword123!\",\n  \"confirmPassword\": \"NewSecurePassword123!\"\n}"
+            },
+            "description": "Reset password using reset token"
           }
         }
       ]
@@ -315,31 +1350,58 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5000"
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "apiVersion",
+      "value": "v1",
+      "type": "string"
     },
     {
       "key": "accessToken",
-      "value": ""
+      "value": "",
+      "type": "string"
     },
     {
       "key": "refreshToken",
-      "value": ""
-    },
-    {
-      "key": "verificationToken",
-      "value": ""
-    },
-    {
-      "key": "resetToken",
-      "value": ""
+      "value": "",
+      "type": "string"
     },
     {
       "key": "adminAccessToken",
-      "value": ""
+      "value": "",
+      "type": "string"
     },
     {
       "key": "superadminAccessToken",
-      "value": ""
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "verificationToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resetToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
     }
   ]
 }

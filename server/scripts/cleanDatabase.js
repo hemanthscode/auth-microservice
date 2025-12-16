@@ -1,22 +1,16 @@
-// src/scripts/cleanDatabase.js
-
-require('dotenv').config();
-const mongoose = require('mongoose');
-const connectDB = require('../config/db');
-
-const User = require('../models/User');
-const Role = require('../models/Role');
-const Token = require('../models/Token');
-const OAuthProvider = require('../models/OAuthProvider');
+require("dotenv").config();
+const mongoose = require("mongoose");
+const connectDB = require("../config/db");
+const User = require("../models/User");
+const Role = require("../models/Role");
+const Token = require("../models/Token");
+const OAuthProvider = require("../models/OAuthProvider");
 
 const cleanDatabase = async () => {
   try {
-    // Connect to database using your existing connectDB function
     await connectDB();
+    console.log("✅ Connected, cleaning database...");
 
-    console.log('Connected to MongoDB, cleaning database...');
-
-    // Delete all documents from collections
     await Promise.all([
       User.deleteMany({}),
       Role.deleteMany({}),
@@ -24,17 +18,15 @@ const cleanDatabase = async () => {
       OAuthProvider.deleteMany({}),
     ]);
 
-    console.log('✅ Database cleaned: all users, roles, tokens, OAuth providers removed.');
-    
-    // Close the connection
+    console.log("✅ Database cleaned");
+
     await mongoose.connection.close();
-    console.log('Connection closed, script finished.');
+    console.log("✅ Connection closed");
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error cleaning database:', error);
+    console.error("❌ Error:", error);
     process.exit(1);
   }
 };
 
-// Run the cleaning script
 cleanDatabase();

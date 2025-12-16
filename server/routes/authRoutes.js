@@ -1,28 +1,13 @@
-/**
- * Authentication Routes
- * 
- * This module defines routes for authentication endpoints.
- * Handles user registration, login, logout, and token management.
- * 
- * @module routes/authRoutes
- */
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-
-// Controllers
-const authController = require('../controllers/authController');
-
-// Middleware
-const { authenticate } = require('../middleware/authMiddleware');
-const { validate } = require('../middleware/validationMiddleware');
+const authController = require("../controllers/authController");
+const { authenticate } = require("../middleware/authMiddleware");
+const { validate } = require("../middleware/validationMiddleware");
 const {
   authLimiter,
   createAccountLimiter,
   emailVerificationLimiter,
-} = require('../middleware/rateLimiter');
-
-// Validators
+} = require("../middleware/rateLimiter");
 const {
   registerValidation,
   loginValidation,
@@ -31,116 +16,61 @@ const {
   resendVerificationValidation,
   changePasswordValidation,
   logoutValidation,
-} = require('../validators/authValidator');
+} = require("../validators/authValidator");
 
-/**
- * @route   POST /api/v1/auth/register
- * @desc    Register a new user
- * @access  Public
- */
 router.post(
-  '/register',
+  "/register",
   createAccountLimiter,
   registerValidation,
   validate,
-  authController.register
+  authController.register,
 );
-
-/**
- * @route   POST /api/v1/auth/login
- * @desc    Login user
- * @access  Public
- */
 router.post(
-  '/login',
+  "/login",
   authLimiter,
   loginValidation,
   validate,
-  authController.login
+  authController.login,
 );
-
-/**
- * @route   POST /api/v1/auth/logout
- * @desc    Logout user
- * @access  Private
- */
 router.post(
-  '/logout',
+  "/logout",
   authenticate,
   logoutValidation,
   validate,
-  authController.logout
+  authController.logout,
 );
-
-/**
- * @route   POST /api/v1/auth/refresh
- * @desc    Refresh access token
- * @access  Public
- */
 router.post(
-  '/refresh',
+  "/refresh",
   refreshTokenValidation,
   validate,
-  authController.refreshToken
+  authController.refreshToken,
 );
-
-/**
- * @route   POST /api/v1/auth/verify-email/:token
- * @desc    Verify email address
- * @access  Public
- */
 router.post(
-  '/verify-email/:token',
+  "/verify-email/:token",
   verifyEmailValidation,
   validate,
-  authController.verifyEmail
+  authController.verifyEmail,
 );
-
-/**
- * @route   POST /api/v1/auth/resend-verification
- * @desc    Resend email verification
- * @access  Public
- */
 router.post(
-  '/resend-verification',
+  "/resend-verification",
   emailVerificationLimiter,
   resendVerificationValidation,
   validate,
-  authController.resendVerification
+  authController.resendVerification,
 );
-
-/**
- * @route   PUT /api/v1/auth/change-password
- * @desc    Change user password
- * @access  Private
- */
 router.put(
-  '/change-password',
+  "/change-password",
   authenticate,
   changePasswordValidation,
   validate,
-  authController.changePassword
+  authController.changePassword,
 );
-
-/**
- * @route   GET /api/v1/auth/me
- * @desc    Get current user
- * @access  Private
- */
-router.get('/me', authenticate, authController.getCurrentUser);
-
-/**
- * @route   GET /api/v1/auth/sessions
- * @desc    Get active sessions
- * @access  Private
- */
-router.get('/sessions', authenticate, authController.getActiveSessions);
-
-/**
- * @route   DELETE /api/v1/auth/sessions/:sessionId
- * @desc    Revoke a session
- * @access  Private
- */
-router.delete('/sessions/:sessionId', authenticate, authController.revokeSession);
+router.get("/me", authenticate, authController.getCurrentUser);
+router.get("/sessions", authenticate, authController.getActiveSessions);
+router.delete(
+  "/sessions/:sessionId",
+  authenticate,
+  authController.revokeSession,
+);
 
 module.exports = router;

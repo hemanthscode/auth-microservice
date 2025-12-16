@@ -1,24 +1,17 @@
-/**
- * User Routes
- * 
- * This module defines routes for user management endpoints.
- * Handles user profile operations and admin user management.
- * 
- * @module routes/userRoutes
- */
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-
-// Controllers
-const userController = require('../controllers/userController');
-
-// Middleware
-const { authenticate } = require('../middleware/authMiddleware');
-const { requireRole, requirePermission } = require('../middleware/rbacMiddleware');
-const { validate, validatePagination, validateSort } = require('../middleware/validationMiddleware');
-
-// Validators
+const userController = require("../controllers/userController");
+const { authenticate } = require("../middleware/authMiddleware");
+const {
+  requireRole,
+  requirePermission,
+  requireMinimumRoleLevel,
+} = require("../middleware/rbacMiddleware");
+const {
+  validate,
+  validatePagination,
+  validateSort,
+} = require("../middleware/validationMiddleware");
 const {
   updateProfileValidation,
   updatePreferencesValidation,
@@ -26,144 +19,106 @@ const {
   searchUsersValidation,
   listUsersValidation,
   updateUserRoleValidation,
-  deleteUserValidation,
-} = require('../validators/userValidator');
+} = require("../validators/userValidator");
 
-/**
- * @route   GET /api/v1/users/profile
- * @desc    Get current user profile
- * @access  Private
- */
-router.get('/profile', authenticate, userController.getProfile);
+// ============================================
+// CURRENT USER ROUTES (no ID param)
+// ============================================
+router.get("/profile", authenticate, userController.getProfile);
 
-/**
- * @route   PUT /api/v1/users/profile
- * @desc    Update user profile
- * @access  Private
- */
 router.put(
-  '/profile',
+  "/profile",
   authenticate,
   updateProfileValidation,
   validate,
-  userController.updateProfile
+  userController.updateProfile,
 );
 
-/**
- * @route   PUT /api/v1/users/preferences
- * @desc    Update user preferences
- * @access  Private
- */
 router.put(
-  '/preferences',
+  "/preferences",
   authenticate,
   updatePreferencesValidation,
   validate,
-  userController.updatePreferences
+  userController.updatePreferences,
 );
 
-/**
- * @route   DELETE /api/v1/users/profile
- * @desc    Delete user account
- * @access  Private
- */
-router.delete('/profile', authenticate, userController.deleteAccount);
+router.delete("/profile", authenticate, userController.deleteAccount);
 
-/**
- * @route   GET /api/v1/users/search
- * @desc    Search users
- * @access  Private
- */
+// ============================================
+// ADMIN ROUTES - SPECIFIC PATHS (before :userId)
+// ============================================
+
+// Search users
 router.get(
-  '/search',
+  "/search",
   authenticate,
   searchUsersValidation,
   validate,
-  userController.searchUsers
+  userController.searchUsers,
 );
 
-/**
- * @route   GET /api/v1/users/stats
- * @desc    Get user statistics
- * @access  Private (Admin)
- */
+// User statistics (Admin only) - MUST be before /:userId
 router.get(
-  '/stats',
+  "/statistics",
   authenticate,
-  requireRole('admin', 'superadmin'),
-  userController.getUserStatistics
+  requireMinimumRoleLevel(8), // Admin or Superadmin
+  userController.getUserStatistics,
 );
 
-/**
- * @route   GET /api/v1/users
- * @desc    List all users
- * @access  Private (Admin)
- */
+// List all users with pagination
 router.get(
-  '/',
+  "/",
   authenticate,
-  requirePermission('users', 'read'),
+  requirePermission("users", "read"),
   listUsersValidation,
   validate,
   validatePagination(),
-  validateSort(['createdAt', 'firstName', 'lastName', 'email']),
-  userController.listUsers
+  validateSort(["createdAt", "firstName", "lastName", "email"]),
+  userController.listUsers,
 );
 
-/**
- * @route   GET /api/v1/users/:userId
- * @desc    Get user by ID
- * @access  Private (Admin)
- */
+// ============================================
+// PARAMETERIZED ROUTES (must be last)
+// ============================================
+
+// Get user by ID
 router.get(
-  '/:userId',
+  "/:userId",
   authenticate,
-  requirePermission('users', 'read'),
+  requirePermission("users", "read"),
   userIdValidation,
   validate,
-  userController.getUserById
+  userController.getUserById,
 );
 
-/**
- * @route   PUT /api/v1/users/:userId/role
- * @desc    Update user role
- * @access  Private (Admin)
- */
+// Update user role
 router.put(
-  '/:userId/role',
+  "/:userId/role",
   authenticate,
-  requirePermission('users', 'update'),
+  requirePermission("users", "update"),
   updateUserRoleValidation,
   validate,
-  userController.updateUserRole
+  userController.updateUserRole,
 );
 
-/**
- * @route   PUT /api/v1/users/:userId/activate
- * @desc    Activate user account
- * @access  Private (Admin)
- */
+// Activate user
 router.put(
-  '/:userId/activate',
+  "/:userId/activate",
   authenticate,
-  requirePermission('users', 'update'),
+  requirePermission("users", "update"),
   userIdValidation,
   validate,
-  userController.activateUser
+  userController.activateUser,
 );
 
-/**
- * @route   PUT /api/v1/users/:userId/deactivate
- * @desc    Deactivate user account
- * @access  Private (Admin)
- */
+// Deactivate user
 router.put(
-  '/:userId/deactivate',
+  "/:userId/deactivate",
   authenticate,
-  requirePermission('users', 'update'),
+  requirePermission("users", "update"),
   userIdValidation,
   validate,
-  userController.deactivateUser
+  userController.deactivateUser,
 );
 
 module.exports = router;

@@ -1,77 +1,43 @@
-/**
- * Password Validators
- * 
- * This module provides validation rules for password-related endpoints.
- * Uses express-validator to validate and sanitize request data.
- * 
- * @module validators/passwordValidator
- */
+const { body, param } = require("express-validator");
+const { PASSWORD_REQUIREMENTS } = require("../utils/constants");
 
-const { body, param } = require('express-validator');
-const { PASSWORD_REQUIREMENTS } = require('../utils/constants');
-
-/**
- * Forgot Password Validation Rules
- * 
- * Validates forgot password request.
- */
 const forgotPasswordValidation = [
-  body('email')
+  body("email")
     .trim()
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage("Email required")
     .isEmail()
-    .withMessage('Please provide a valid email address')
+    .withMessage("Invalid email")
     .normalizeEmail()
     .toLowerCase(),
 ];
 
-/**
- * Reset Password Validation Rules
- * 
- * Validates password reset request.
- */
 const resetPasswordValidation = [
-  param('token')
+  param("token")
     .notEmpty()
-    .withMessage('Reset token is required')
+    .withMessage("Token required")
     .isString()
-    .withMessage('Token must be a string')
-    .isLength({ min: 32 })
-    .withMessage('Invalid token format'),
-  
-  body('newPassword')
+    .isLength({ min: 32 }),
+  body("newPassword")
     .notEmpty()
-    .withMessage('New password is required')
+    .withMessage("Password required")
     .isLength({ min: PASSWORD_REQUIREMENTS.MIN_LENGTH })
-    .withMessage(`Password must be at least ${PASSWORD_REQUIREMENTS.MIN_LENGTH} characters long`)
+    .withMessage(`Min ${PASSWORD_REQUIREMENTS.MIN_LENGTH} chars`)
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain uppercase, lowercase, number, and special character'),
-  
-  body('confirmPassword')
+    .withMessage("Need uppercase, lowercase, number, special char"),
+  body("confirmPassword")
     .notEmpty()
-    .withMessage('Password confirmation is required')
-    .custom((value, { req }) => {
-      if (value !== req.body.newPassword) {
-        throw new Error('Passwords do not match');
-      }
-      return true;
-    }),
+    .withMessage("Confirm password")
+    .custom((value, { req }) => value === req.body.newPassword)
+    .withMessage("Passwords must match"),
 ];
 
-/**
- * Verify Token Validation Rules
- * 
- * Validates token verification (email or password reset).
- */
 const verifyTokenValidation = [
-  param('token')
+  param("token")
     .notEmpty()
-    .withMessage('Token is required')
+    .withMessage("Token required")
     .isString()
-    .withMessage('Token must be a string')
-    .isLength({ min: 32 })
-    .withMessage('Invalid token format'),
+    .isLength({ min: 32 }),
 ];
 
 module.exports = {

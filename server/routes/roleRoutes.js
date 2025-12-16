@@ -1,24 +1,16 @@
-/**
- * Role Routes
- * 
- * This module defines routes for role management endpoints.
- * Handles RBAC operations and permission management.
- * 
- * @module routes/roleRoutes
- */
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-
-// Controllers
-const roleController = require('../controllers/roleController');
-
-// Middleware
-const { authenticate } = require('../middleware/authMiddleware');
-const { requireRole, requirePermission } = require('../middleware/rbacMiddleware');
-const { validate, validatePagination } = require('../middleware/validationMiddleware');
-
-// Validators
+const roleController = require("../controllers/roleController");
+const { authenticate } = require("../middleware/authMiddleware");
+const {
+  requireRole,
+  requirePermission,
+  requireMinimumRoleLevel,
+} = require("../middleware/rbacMiddleware");
+const {
+  validate,
+  validatePagination,
+} = require("../middleware/validationMiddleware");
 const {
   createRoleValidation,
   updateRoleValidation,
@@ -26,155 +18,111 @@ const {
   addPermissionValidation,
   removePermissionValidation,
   getUsersByRoleValidation,
-} = require('../validators/roleValidator');
+} = require("../validators/roleValidator");
 
-/**
- * @route   POST /api/v1/roles/initialize
- * @desc    Initialize default roles
- * @access  Private (Superadmin)
- */
+// Initialize default roles (Superadmin only)
 router.post(
-  '/initialize',
+  "/initialize",
   authenticate,
-  requireRole('superadmin'),
-  roleController.initializeRoles
+  requireRole("superadmin"),
+  roleController.initializeRoles,
 );
 
-/**
- * @route   GET /api/v1/roles/stats
- * @desc    Get role statistics
- * @access  Private (Admin)
- */
+// Get role statistics (Admin+ can view)
 router.get(
-  '/stats',
+  "/statistics",
   authenticate,
-  requirePermission('roles', 'read'),
-  roleController.getRoleStatistics
+  requireMinimumRoleLevel(8), // Admin level
+  roleController.getRoleStatistics,
 );
 
-/**
- * @route   POST /api/v1/roles
- * @desc    Create a new role
- * @access  Private (Superadmin)
- */
+// Create new role (Superadmin only)
 router.post(
-  '/',
+  "/",
   authenticate,
-  requireRole('superadmin'),
+  requireRole("superadmin"),
   createRoleValidation,
   validate,
-  roleController.createRole
+  roleController.createRole,
 );
 
-/**
- * @route   GET /api/v1/roles
- * @desc    Get all roles
- * @access  Private (Admin)
- */
+// List all roles (Admin+ can view)
 router.get(
-  '/',
+  "/",
   authenticate,
-  requirePermission('roles', 'read'),
-  roleController.getAllRoles
+  requireMinimumRoleLevel(8), // Admin level or above
+  roleController.getAllRoles,
 );
 
-/**
- * @route   GET /api/v1/roles/:roleId
- * @desc    Get role by ID
- * @access  Private (Admin)
- */
+// Get role by ID (Admin+ can view)
 router.get(
-  '/:roleId',
+  "/:roleId",
   authenticate,
-  requirePermission('roles', 'read'),
+  requireMinimumRoleLevel(8),
   roleIdValidation,
   validate,
-  roleController.getRoleById
+  roleController.getRoleById,
 );
 
-/**
- * @route   PUT /api/v1/roles/:roleId
- * @desc    Update role
- * @access  Private (Superadmin)
- */
+// Update role (Superadmin only)
 router.put(
-  '/:roleId',
+  "/:roleId",
   authenticate,
-  requireRole('superadmin'),
+  requireRole("superadmin"),
   updateRoleValidation,
   validate,
-  roleController.updateRole
+  roleController.updateRole,
 );
 
-/**
- * @route   DELETE /api/v1/roles/:roleId
- * @desc    Delete role
- * @access  Private (Superadmin)
- */
+// Delete role (Superadmin only)
 router.delete(
-  '/:roleId',
+  "/:roleId",
   authenticate,
-  requireRole('superadmin'),
+  requireRole("superadmin"),
   roleIdValidation,
   validate,
-  roleController.deleteRole
+  roleController.deleteRole,
 );
 
-/**
- * @route   GET /api/v1/roles/:roleId/permissions
- * @desc    Get role permissions
- * @access  Private (Admin)
- */
+// Get role permissions (Admin+ can view)
 router.get(
-  '/:roleId/permissions',
+  "/:roleId/permissions",
   authenticate,
-  requirePermission('roles', 'read'),
+  requireMinimumRoleLevel(8),
   roleIdValidation,
   validate,
-  roleController.getRolePermissions
+  roleController.getRolePermissions,
 );
 
-/**
- * @route   POST /api/v1/roles/:roleId/permissions
- * @desc    Add permission to role
- * @access  Private (Superadmin)
- */
+// Add permission to role (Superadmin only)
 router.post(
-  '/:roleId/permissions',
+  "/:roleId/permissions",
   authenticate,
-  requireRole('superadmin'),
+  requireRole("superadmin"),
   addPermissionValidation,
   validate,
-  roleController.addPermission
+  roleController.addPermission,
 );
 
-/**
- * @route   DELETE /api/v1/roles/:roleId/permissions
- * @desc    Remove permission from role
- * @access  Private (Superadmin)
- */
+// Remove permission from role (Superadmin only)
 router.delete(
-  '/:roleId/permissions',
+  "/:roleId/permissions",
   authenticate,
-  requireRole('superadmin'),
+  requireRole("superadmin"),
   removePermissionValidation,
   validate,
-  roleController.removePermission
+  roleController.removePermission,
 );
 
-/**
- * @route   GET /api/v1/roles/:roleId/users
- * @desc    Get users with specific role
- * @access  Private (Admin)
- */
+// Get users by role (Admin+ can view)
 router.get(
-  '/:roleId/users',
+  "/:roleId/users",
   authenticate,
-  requirePermission('roles', 'read'),
+  requireMinimumRoleLevel(8),
   getUsersByRoleValidation,
   validate,
   validatePagination(),
-  roleController.getUsersByRole
+  roleController.getUsersByRole,
 );
 
 module.exports = router;

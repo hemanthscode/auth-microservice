@@ -1,212 +1,91 @@
-/**
- * Role Controller
- * 
- * This module handles HTTP requests for role management endpoints.
- * Processes RBAC operations including role and permission management.
- * 
- * @module controllers/roleController
- */
+const roleService = require("../services/roleService");
+const { asyncHandler } = require("../middleware/errorHandler");
 
-const roleService = require('../services/roleService');
-const { asyncHandler } = require('../middleware/errorHandler');
-
-/**
- * Create Role
- * 
- * @route   POST /api/v1/roles
- * @access  Private (Superadmin)
- */
 const createRole = asyncHandler(async (req, res) => {
-  const roleData = req.body;
-  
-  const role = await roleService.createRole(roleData);
-  
-  res.status(201).json({
-    success: true,
-    message: 'Role created successfully',
-    data: { role },
-  });
+  const role = await roleService.createRole(req.body);
+  res
+    .status(201)
+    .json({ success: true, message: "Role created", data: { role } });
 });
 
-/**
- * Get All Roles
- * 
- * @route   GET /api/v1/roles
- * @access  Private (Admin)
- */
 const getAllRoles = asyncHandler(async (req, res) => {
-  const filters = {
-    activeOnly: req.query.activeOnly === 'true',
-  };
-  
-  const roles = await roleService.listAllRoles(filters);
-  
-  res.status(200).json({
-    success: true,
-    data: {
-      roles,
-      total: roles.length,
-    },
+  const roles = await roleService.listAllRoles({
+    activeOnly: req.query.activeOnly === "true",
   });
+  res.status(200).json({ success: true, data: { roles, total: roles.length } });
 });
 
-/**
- * Get Role By ID
- * 
- * @route   GET /api/v1/roles/:roleId
- * @access  Private (Admin)
- */
 const getRoleById = asyncHandler(async (req, res) => {
-  const { roleId } = req.params;
-  
-  const role = await roleService.getRoleById(roleId);
-  
-  res.status(200).json({
-    success: true,
-    data: { role },
-  });
+  const role = await roleService.getRoleById(req.params.roleId);
+  res.status(200).json({ success: true, data: { role } });
 });
 
-/**
- * Update Role
- * 
- * @route   PUT /api/v1/roles/:roleId
- * @access  Private (Superadmin)
- */
 const updateRole = asyncHandler(async (req, res) => {
-  const { roleId } = req.params;
-  const updateData = req.body;
-  
-  const role = await roleService.updateRole(roleId, updateData);
-  
-  res.status(200).json({
-    success: true,
-    message: 'Role updated successfully',
-    data: { role },
-  });
+  const role = await roleService.updateRole(req.params.roleId, req.body);
+  res
+    .status(200)
+    .json({ success: true, message: "Role updated", data: { role } });
 });
 
-/**
- * Delete Role
- * 
- * @route   DELETE /api/v1/roles/:roleId
- * @access  Private (Superadmin)
- */
 const deleteRole = asyncHandler(async (req, res) => {
   const { roleId } = req.params;
-  
-  await roleService.deleteRole(roleId);
-  
-  res.status(200).json({
-    success: true,
-    message: 'Role deleted successfully',
-  });
-});
+  const force = req.query.force === "true";
 
-/**
- * Add Permission to Role
- * 
- * @route   POST /api/v1/roles/:roleId/permissions
- * @access  Private (Superadmin)
- */
-const addPermission = asyncHandler(async (req, res) => {
-  const { roleId } = req.params;
-  const { resource, action } = req.body;
-  
-  const role = await roleService.addPermissionToRole(roleId, resource, action);
-  
-  res.status(200).json({
-    success: true,
-    message: 'Permission added successfully',
-    data: { role },
-  });
-});
+  const result = await roleService.deleteRole(roleId, force);
 
-/**
- * Remove Permission from Role
- * 
- * @route   DELETE /api/v1/roles/:roleId/permissions
- * @access  Private (Superadmin)
- */
-const removePermission = asyncHandler(async (req, res) => {
-  const { roleId } = req.params;
-  const { resource, action } = req.body;
-  
-  const role = await roleService.removePermissionFromRole(roleId, resource, action);
-  
   res.status(200).json({
     success: true,
-    message: 'Permission removed successfully',
-    data: { role },
-  });
-});
-
-/**
- * Get Role Permissions
- * 
- * @route   GET /api/v1/roles/:roleId/permissions
- * @access  Private (Admin)
- */
-const getRolePermissions = asyncHandler(async (req, res) => {
-  const { roleId } = req.params;
-  
-  const permissions = await roleService.getRolePermissions(roleId);
-  
-  res.status(200).json({
-    success: true,
-    data: { permissions },
-  });
-});
-
-/**
- * Get Users By Role
- * 
- * @route   GET /api/v1/roles/:roleId/users
- * @access  Private (Admin)
- */
-const getUsersByRole = asyncHandler(async (req, res) => {
-  const { roleId } = req.params;
-  const options = {
-    page: parseInt(req.query.page) || 1,
-    limit: parseInt(req.query.limit) || 10,
-  };
-  
-  const result = await roleService.getUsersByRole(roleId, options);
-  
-  res.status(200).json({
-    success: true,
+    message: "Role deleted successfully",
     data: result,
   });
 });
 
-/**
- * Get Role Statistics
- * 
- * @route   GET /api/v1/roles/stats
- * @access  Private (Admin)
- */
-const getRoleStatistics = asyncHandler(async (req, res) => {
-  const stats = await roleService.getRoleStatistics();
-  
-  res.status(200).json({
-    success: true,
-    data: { stats },
-  });
+const addPermission = asyncHandler(async (req, res) => {
+  const { resource, action } = req.body;
+  const role = await roleService.addPermissionToRole(
+    req.params.roleId,
+    resource,
+    action,
+  );
+  res
+    .status(200)
+    .json({ success: true, message: "Permission added", data: { role } });
 });
 
-/**
- * Initialize Default Roles
- * 
- * @route   POST /api/v1/roles/initialize
- * @access  Private (Superadmin)
- */
+const removePermission = asyncHandler(async (req, res) => {
+  const { resource, action } = req.body;
+  const role = await roleService.removePermissionFromRole(
+    req.params.roleId,
+    resource,
+    action,
+  );
+  res
+    .status(200)
+    .json({ success: true, message: "Permission removed", data: { role } });
+});
+
+const getRolePermissions = asyncHandler(async (req, res) => {
+  const permissions = await roleService.getRolePermissions(req.params.roleId);
+  res.status(200).json({ success: true, data: { permissions } });
+});
+
+const getUsersByRole = asyncHandler(async (req, res) => {
+  const options = {
+    page: parseInt(req.query.page) || 1,
+    limit: parseInt(req.query.limit) || 10,
+  };
+  const result = await roleService.getUsersByRole(req.params.roleId, options);
+  res.status(200).json({ success: true, data: result });
+});
+
+const getRoleStatistics = asyncHandler(async (req, res) => {
+  const stats = await roleService.getRoleStatistics();
+  res.status(200).json({ success: true, data: { stats } });
+});
+
 const initializeRoles = asyncHandler(async (req, res) => {
   await roleService.initializeDefaultRoles();
-  
-  res.status(200).json({
-    success: true,
-    message: 'Default roles initialized successfully',
-  });
+  res.status(200).json({ success: true, message: "Default roles initialized" });
 });
 
 module.exports = {
